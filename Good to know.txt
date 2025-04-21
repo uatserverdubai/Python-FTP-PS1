@@ -1,0 +1,87 @@
+To transfer files from one workstation to another using FTP via PowerShell (.ps1 script), you can use Python as the FTP server on one machine and PowerShell as the client on the other.
+
+Here’s how to set it up:
+
+✅ Step 1: Set Up an FTP Server Using Python (on the "sending" machine)
+If you're transferring from Workstation A to Workstation B, then A will act as an FTP server.
+
+🐍 Python Script (FTP server):
+Install pyftpdlib (only once):
+
+bash
+Copy
+Edit
+pip install pyftpdlib
+Then create a file called ftp_server.py with the following content:
+
+python
+Copy
+Edit
+from pyftpdlib.authorizers import DummyAuthorizer
+from pyftpdlib.handlers import FTPHandler
+from pyftpdlib.servers import FTPServer
+
+authorizer = DummyAuthorizer()
+authorizer.add_user("blondel", "password123", ".", perm="elradfmw")  # '.' means current dir
+
+handler = FTPHandler
+handler.authorizer = authorizer
+
+server = FTPServer(("0.0.0.0", 21), handler)
+server.serve_forever()
+Then run:
+
+bash
+Copy
+Edit
+python ftp_server.py
+💡 This starts a basic FTP server using user blondel and password password123.
+
+✅ Step 2: Use PowerShell to Transfer File (on "receiving" machine)
+Create a PowerShell script, e.g. ftp_transfer.ps1:
+
+powershell
+Copy
+Edit
+$ftp = "ftp://192.168.1.100/samplefile.txt"     # IP of FTP server (Workstation A)
+$user = "blondel"
+$pass = "password123"
+$target = "C:\Users\Public\samplefile.txt"      # Destination path on Workstation B
+
+$webclient = New-Object System.Net.WebClient
+$webclient.Credentials = New-Object System.Net.NetworkCredential($user, $pass)
+$webclient.DownloadFile($ftp, $target)
+Replace:
+
+192.168.1.100 → with the IP of Workstation A
+
+samplefile.txt → the file you want to download
+
+Destination path as needed
+
+Then run the script on Workstation B:
+
+powershell
+Copy
+Edit
+.\ftp_transfer.ps1
+🔒 Optional: Upload from PowerShell instead
+To send a file to the FTP server from PowerShell:
+
+powershell
+Copy
+Edit
+$ftp = "ftp://192.168.1.100/uploaded.txt"
+$user = "blondel"
+$pass = "password123"
+$source = "C:\Users\Public\myfile.txt"
+
+$webclient = New-Object System.Net.WebClient
+$webclient.Credentials = New-Object System.Net.NetworkCredential($user, $pass)
+$webclient.UploadFile($ftp, $source)
+✅ Summary
+
+Task	Tool
+Start FTP server	Python (pyftpdlib)
+Transfer file (download)	PowerShell script
+Transfer file (upload)	PowerShell script
